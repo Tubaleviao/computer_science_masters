@@ -1,0 +1,961 @@
+// Final Project
+
+// Java Code InMapperWordCount
+
+import java.io.IOException;
+import java.util.*;
+import java.util.Map.Entry;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+
+public class InMapperWordCount {
+ 
+	public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
+		private HashMap<String, Integer> H;
+		protected void setup(Mapper<LongWritable, Text, Text, IntWritable>.Context context)
+				throws IOException, InterruptedException {
+			super.setup(context);
+			H = new HashMap<String, Integer>();
+		}
+		public void map(LongWritable key, Text value, Context context) 
+				throws IOException, InterruptedException {
+		    String line = value.toString();
+		    StringTokenizer tokenizer = new StringTokenizer(line);
+		    while (tokenizer.hasMoreTokens()) {
+		    	String word = tokenizer.nextToken();
+				if(H.containsKey(word)) 
+					H.put(word, H.get(word)+1);
+				else H.put(word, 1);
+		    }
+		}
+		    protected void cleanup(Mapper<LongWritable, Text, Text, IntWritable>.Context context)
+				throws IOException, InterruptedException {
+			Iterator<Entry<String, Integer>> rolling = H.entrySet().iterator();
+			while(rolling.hasNext()) {
+				Entry<String, Integer> key = (Entry<String, Integer>)rolling.next();
+				Text word = new Text(key.getKey());
+				context.write(word, new IntWritable(key.getValue())); 
+			}
+			super.cleanup(context);
+		    }
+	}
+ 
+	public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
+			public void reduce(Text key, Iterable<IntWritable> values, Context context)
+					throws IOException, InterruptedException {
+				int sum = 0;
+				for (IntWritable val : values) sum += val.get();
+				context.write(key, new IntWritable(sum));
+			}
+	}
+ 
+	public static void main(String[] args) throws Exception {
+			Configuration conf = new Configuration();
+			@SuppressWarnings("deprecation")
+			Job job = new Job(conf, "wordcount");
+			job.setJarByClass(InMapperWordCount.class);
+			job.setOutputKeyClass(Text.class);
+			job.setOutputValueClass(IntWritable.class);
+			job.setMapperClass(Map.class);
+			job.setReducerClass(Reduce.class);
+			job.setInputFormatClass(TextInputFormat.class);
+			job.setOutputFormatClass(TextOutputFormat.class);
+			FileInputFormat.addInputPath(job, new Path(args[0]));
+			FileOutputFormat.setOutputPath(job, new Path(args[1]));    
+			job.waitForCompletion(true);
+	}
+}
+
+// Java Code Average
+
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+     
+public class Average {
+     
+	 public static class Map extends Mapper<LongWritable, Text, Text, IntWritable> {
+	    private Text word = new Text();
+	    public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+		    String line = value.toString();
+		    String regex = "(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.)";
+		    regex = regex+"{3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])";
+		    Pattern ValidIpAddressRegex = Pattern.compile(regex);
+		    Matcher ip = ValidIpAddressRegex.matcher(line);
+		    if(ip.find()){
+		    	String[] words = line.trim().split(" ");
+		    	String lastValue = words[words.length-1];
+		    	if(!lastValue.equals("-")) {
+		    		Integer last = Integer.parseInt(lastValue);
+			    	word.set(ip.group());  
+			    	context.write(word, new IntWritable(last) );
+		    	}
+		    }
+	    }
+	 }
+     
+	 public static class Reduce extends Reducer<Text, IntWritable, Text, IntWritable> {
+	    public void reduce(Text key, Iterable<IntWritable> values, Context context)
+	      throws IOException, InterruptedException {
+	        int sum = 0;
+	        int count = 0;
+		    for (IntWritable val : values) { // average problem
+		        sum += val.get();
+		        count += 1;
+		    }
+		    context.write(key, new IntWritable(sum/count));
+	    }
+	 }
+     
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration(); 
+		@SuppressWarnings("deprecation")
+		Job job = new Job(conf, "average");
+		job.setJarByClass(Average.class);  // set the class name
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(IntWritable.class);
+		job.setMapperClass(Map.class);
+		job.setReducerClass(Reduce.class);
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setOutputFormatClass(TextOutputFormat.class);
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		job.waitForCompletion(true);
+	}
+     
+}
+
+// Average Output
+
+6383		10.0.0.1
+7368		12.22.207.2
+6815		128.227.88.7
+4488		142.27.64.3
+4349		145.253.208.9
+10879		194.151.73.4
+6032		195.11.231.2
+2300		195.230.181.1
+5128		195.246.13.1
+6634		200.160.249.6
+2300		200.222.33.3
+2164		203.147.138.2
+5404		207.195.59.1
+3067		208.247.148.1
+2869		212.21.228.2
+5212		212.92.37.6
+7649		213.181.81.4
+5785		213.54.168.1
+6051		216.139.185.4
+3169		219.95.17.5
+2446		4.37.97.1
+3056		61.165.64.6
+2645		61.9.4.6
+12710		64.242.88.1
+0			64.246.94.1
+3169		66.213.206.2
+5488		67.131.107.5
+2996		80.58.14.2
+5934		80.58.33.4
+4114		80.58.35.1
+
+// Java code InMapperAverage
+
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.conf.*;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+     
+public class Average {
+	// https://stackoverflow.com/questions/28914596/mapreduce-output-arraywritable
+	public static class IntArrayWritable extends ArrayWritable {
+	    public IntArrayWritable(IntWritable[] intWritables) {
+	        super(IntWritable.class);
+	    }
+	    @Override
+	    public IntWritable[] get() {
+	        return (IntWritable[]) super.get();
+	    }
+	    @Override
+	    public void write(DataOutput arg0) throws IOException {
+	        for(IntWritable data : get()){
+	            data.write(arg0);
+	        }
+	    }
+	}   
+     
+	 public static class Map extends Mapper<LongWritable, Text, Text, Text> {
+	    private HashMap<String, Integer[]> H;
+	    protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
+				throws IOException, InterruptedException {
+			super.setup(context);
+			H = new HashMap<String, Integer[]>();
+		}
+	    public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+		    String line = value.toString();
+		    String regex = "(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.)";
+		    regex = regex+"{3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])";
+		    Pattern ValidIpAddressRegex = Pattern.compile(regex);
+		    Matcher ip = ValidIpAddressRegex.matcher(line);
+		    if(ip.find()){
+		    	String[] words = line.trim().split(" ");
+		    	String lastValue = words[words.length-1];
+		    	if(!lastValue.equals("-")) {
+		    		Integer last = Integer.parseInt(lastValue);
+			    	String word = ip.group();
+			    	if(H.containsKey(word)) {
+			    		Integer[] newValue = new Integer[] {H.get(word)[0]+last, H.get(word)[1]+1};
+			    		H.put(word, newValue);
+			    	}else H.put(word, new Integer[] {last, 1});
+		    	}
+		    }
+	    }
+	    protected void cleanup(Mapper<LongWritable, Text, Text, Text>.Context context)
+				throws IOException, InterruptedException {
+			Iterator<Entry<String, Integer[]>> rolling = H.entrySet().iterator();
+			while(rolling.hasNext()) {
+				Entry<String, Integer[]> key = (Entry<String, Integer[]>)rolling.next();
+				Text word = new Text(key.getKey());
+				String newValue = key.getValue()[0].toString()+","+key.getValue()[1].toString() ;
+				context.write(word, new Text(newValue)); 
+			}
+			super.cleanup(context);
+		}
+	 }
+     
+	 public static class Reduce extends Reducer<Text, Text, Text, DoubleWritable> {
+	    public void reduce(Text key, Iterable<Text> values, Context context)
+	      throws IOException, InterruptedException {
+	        int sum = 0;
+	        int count = 0;
+		    for (Text val : values) { // average problem
+		    	String str = val.toString();
+		        sum += Integer.parseInt(str.split(",")[0]);
+		        count += Integer.parseInt(str.split(",")[1]);
+		    }
+		    context.write(key, new DoubleWritable(sum/count));
+	    }
+	 }
+     
+	public static void main(String[] args) throws Exception {
+		Configuration conf = new Configuration(); 
+		@SuppressWarnings("deprecation")
+		Job job = new Job(conf, "average");
+		job.setJarByClass(Average.class);  // set the class name
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(Text.class); // set map output
+		job.setMapperClass(Map.class);
+		job.setReducerClass(Reduce.class);
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setOutputFormatClass(TextOutputFormat.class);
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		job.waitForCompletion(true);
+	}
+}
+
+
+// InMapperAverage Output
+
+6383		10.0.0.1
+7368		12.22.207.2
+6815		128.227.88.7
+4488		142.27.64.3
+4349		145.253.208.9
+10879		194.151.73.4
+6032		195.11.231.2
+2300		195.230.181.1
+5128		195.246.13.1
+6634		200.160.249.6
+2300		200.222.33.3
+2164		203.147.138.2
+5404		207.195.59.1
+3067		208.247.148.1
+2869		212.21.228.2
+5212		212.92.37.6
+7649		213.181.81.4
+5785		213.54.168.1
+6051		216.139.185.4
+3169		219.95.17.5
+2446		4.37.97.1
+3056		61.165.64.6
+2645		61.9.4.6
+12710		64.242.88.1
+0			64.246.94.1
+3169		66.213.206.2
+5488		67.131.107.5
+2996		80.58.14.2
+5934		80.58.33.4
+4114		80.58.35.1
+
+// Pseudo code for PAIR approach
+
+class Mapper
+	method Map(docid a, docid, d)
+		for all term v in Window(u) do
+			Emit((u,*), 1).
+			Emit((u,v), 1).
+class Reducer
+	method Initialize()
+		total = 0
+	method Reduce(Pair(u,v), Integer[c1,c2, ...])
+		s = 0
+		if(v == *)
+			total = [c1,c2, ...].length
+		else
+			for all Integer c in [c1,c2, ...] do 
+				s = s+c.
+			Emit((u,v), s/total)
+
+// Java code for PAIR approach
+
+package FinalProject;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+
+public class PairFrequencies {
+	
+	public static class Pair {
+		private Text a;
+		private Text b;
+		public Pair(Text a, Text b) {this.a = a; this.b = b;}
+		public Pair() {this(new Text(), new Text());}
+		public Text getA() { return this.a;}
+		public Text getB() { return this.b;}
+		public void setA(Text a) {this.a = a;}
+		public void setB(Text b) {this.b = b;}
+		@Override
+		public String toString() {return "<"+a.toString()+","+b.toString()+">";}
+	}
+	
+	public static class Map extends Mapper<LongWritable, Text, PairWritable, IntWritable> {
+	    private HashMap<PairWritable, Integer> allHash;
+	    
+	    protected void setup(Mapper<LongWritable, Text, PairWritable, IntWritable>.Context context)
+	    	throws IOException, InterruptedException{
+	    	super.setup(context);
+	    	allHash = new HashMap<PairWritable, Integer>();
+	    }
+	    protected void cleanup(Mapper<LongWritable, Text, PairWritable, IntWritable>.Context context)
+				throws IOException, InterruptedException {
+	    	for(Entry<PairWritable, Integer> key2 : allHash.entrySet()) {
+		    	context.write(key2.getKey(), new IntWritable(key2.getValue()) );
+		    }
+	    	super.cleanup(context);
+	    }
+	    public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+	    	String line = value.toString();
+		    String[] words = line.trim().split(" ");
+		    for(int prev=0; prev<words.length; prev++) {
+		    	if(words[prev].equals("")) {prev++;}
+		    	for(int curr=prev+1; curr<words.length; curr++) {
+		    		if(words[curr].equals("")) {curr++;}
+		    		if(!words[prev].equals(words[curr])) {
+		    			PairWritable newKey = new PairWritable(new Text(words[prev]),new Text(words[curr]));
+			    		PairWritable starKey = new PairWritable(new Text(words[prev]),new Text("*"));
+		    			if(allHash.containsKey(newKey)) {
+		    				Integer ns = allHash.get(starKey)+1;
+			    			Integer nk = allHash.get(newKey)+1;
+			    			allHash.remove(starKey);
+			    			allHash.remove(newKey);
+			    			allHash.put(starKey, ns);
+			    			allHash.put(newKey, nk);
+		    			}else {
+		    				allHash.put(starKey, 1);
+			    			allHash.put(newKey, 1);
+		    			}
+		    		}else {
+		    			curr = words.length;
+		    		}
+		    	}
+		    }
+	    }
+	 }
+
+	public static class Reduce extends Reducer<PairWritable, IntWritable, Text, DoubleWritable> {
+		private Integer total=0;
+	    public void reduce(PairWritable key, Iterable<IntWritable> values, Context context)
+	      throws IOException, InterruptedException {
+	    	Integer sum = 0;
+		    for (IntWritable val : values) { 
+		    	sum += val.get();
+		    }
+		    if(key.getB().toString().equals("*")) {
+		    	total = sum;
+		    }else {
+		    	Text resp = new Text(key.toString());
+		    	Double result = ((double)sum / (double)total);
+			    DoubleWritable val = new DoubleWritable(result);
+		    	context.write(resp, val);
+		    }
+	    }
+	 }
+	
+	public static class PairWritable extends Pair implements WritableComparable<PairWritable> {
+		public PairWritable() {super();}
+	    public PairWritable(Text a, Text b) {super(a, b);}
+	    @Override
+	    public void write(DataOutput out) throws IOException {
+	    	this.getA().write(out);
+			this.getB().write(out);
+	   }
+	    @Override
+	    public void readFields(DataInput in) throws IOException {
+	    	this.getA().readFields(in);
+			this.getB().readFields(in);
+	   }
+	    @Override
+		public int compareTo(PairWritable comming) {
+			int k = new Text(this.toString())
+					.compareTo(new Text(comming.toString()));
+			if(k != 0) return k;
+			return new Text(this.toString())
+					.compareTo(new Text(comming.toString()));
+		}
+	}
+	
+	 public static void main(String[] args) throws Exception {
+	    Configuration conf = new Configuration();
+	    @SuppressWarnings("deprecation")
+		Job job = new Job(conf, "PairFrequencies");
+	    job.setJarByClass(PairFrequencies.class);  // set the class name
+	    job.setOutputKeyClass(PairWritable.class);
+	    job.setOutputValueClass(IntWritable.class);
+	    job.setMapperClass(Map.class);
+	    job.setReducerClass(Reduce.class);
+	    job.setInputFormatClass(TextInputFormat.class);
+	    job.setOutputFormatClass(TextOutputFormat.class);
+	    FileInputFormat.addInputPath(job, new Path(args[0]));
+	    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+	    job.waitForCompletion(true);
+	 }	 
+}
+
+// Result of PAIR approach (in-mapper)
+<A10,B12>	0.3333333333333333
+<A10,C31>	0.3333333333333333
+<A10,D76>	0.3333333333333333
+<A12,A10>	0.1
+<A12,B11>	0.1
+<A12,B12>	0.2
+<A12,C31>	0.4
+<A12,D76>	0.2
+<B11,A10>	0.058823529411764705
+<B11,A12>	0.11764705882352941
+<B11,B12>	0.17647058823529413
+<B11,C31>	0.4117647058823529
+<B11,D76>	0.23529411764705882
+<B12,A12>	0.1111111111111111
+<B12,B11>	0.2222222222222222
+<B12,C31>	0.4444444444444444
+<B12,D76>	0.2222222222222222
+<C31,A10>	0.08333333333333333
+<C31,A12>	0.16666666666666666
+<C31,B11>	0.16666666666666666
+<C31,B12>	0.25
+<C31,D76>	0.3333333333333333
+<D76,A10>	0.0625
+<D76,A12>	0.125
+<D76,B11>	0.1875
+<D76,B12>	0.25
+<D76,C31>	0.375
+
+// Pseudo code for STRIPE approach
+class Mapper 
+	method Map(docida, doc d)
+		for all term u in record r do
+			H = new AssociativeArray
+			for all term v in Window(u) do
+				H{v} = H{v} +1 . // checking null
+			Emit(u, H)
+class Reducer
+	method Reduce(term u, AssociativeArray [H1, H2, ...])
+		Hfinal = new AssociativeArray
+		for all stripe H in [H1, H2, ...] do
+			Hfinal = Hfinal + H
+		Emit(u, Hfinal)
+
+// Java code for STRIPE approach
+
+package FinalProject;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.MapWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+
+public class StripeFrequencies {
+	
+	public static class Map extends Mapper<LongWritable, Text, Text, MapWritable> {
+		private HashMap<String, HashMap<String, Integer>> allHash;
+	    protected void setup(Mapper<LongWritable, Text, Text, MapWritable>.Context context)
+	    	throws IOException, InterruptedException{
+	    	allHash = new HashMap<String, HashMap<String, Integer>>();
+	    	super.setup(context);
+	    }
+	    public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+	    	String line = value.toString();
+		    String[] words = line.trim().split(" ");
+		    for(int prev=0; prev<words.length; prev++) {
+		    	while(words[prev].trim().equals("")) prev++;
+		    	HashMap<String, Integer> subHash = new HashMap<String, Integer>();
+		    	for(int curr=prev+1; curr<words.length; curr++) {
+		    		while(words[curr].trim().equals("")) curr++;
+		    		if(!words[prev].equals(words[curr])) {
+		    			if(subHash.containsKey(words[curr])) {
+			    			subHash.put(words[curr], subHash.get(words[curr])+1);
+			    		}else subHash.put(words[curr], 1);
+		    		}else curr=words.length;
+		    		
+		    	}
+		    	if(subHash.size()>0) {
+		    		if(!allHash.containsKey(words[prev])) allHash.put(words[prev], subHash);
+		    		else {
+		    			HashMap<String, Integer> actualHash = allHash.get(words[prev]);
+		    			//subHash.forEach((k, v) -> actualHash.merge(k,v,(v1, v2) -> new IntWritable(((IntWritable)v1).get()+((IntWritable)v2).get()) ));
+		    			for(Entry<String, Integer> h1 : subHash.entrySet()) {
+		    				if(!actualHash.containsKey(h1.getKey())) actualHash.put(h1.getKey(), h1.getValue());
+		    				else actualHash.put(h1.getKey(), h1.getValue()+actualHash.get(h1.getKey()));
+		    			}
+		    			allHash.put(words[prev], actualHash);
+		    		}
+		    	}
+		    }
+	    }
+	    protected void cleanup(Mapper<LongWritable, Text, Text, MapWritable>.Context context)
+				throws IOException, InterruptedException {
+	    	for(Entry<String, HashMap<String, Integer>> hash : allHash.entrySet()) {
+	    		MapWritable subWritableHash = new MapWritable();
+	    		for(Entry<String, Integer> sh : hash.getValue().entrySet()) {
+	    			subWritableHash.put(new Text(sh.getKey()), new IntWritable(sh.getValue()));
+	    		}
+	    		context.write(new Text(hash.getKey()), subWritableHash);
+	    	}
+	    	super.cleanup(context);
+	    }
+	 }
+
+	public static class Reduce extends Reducer<Text, MapWritable, Text, MapWritable> {
+		private HashMap<String, MapWritable> allHash;
+		Integer total =0;
+		protected void setup(Reducer<Text, MapWritable, Text, MapWritable>.Context context)
+				throws IOException, InterruptedException {
+			super.setup(context);
+			allHash = new HashMap<String, MapWritable>();
+		}
+		protected void cleanup(Reducer<Text, MapWritable, Text, MapWritable>.Context context)
+				throws IOException, InterruptedException {
+			// transform into relative frequencies
+		    for (Entry<String, MapWritable> hash : allHash.entrySet()) {
+	    		MapWritable new_sub_hash = hash.getValue();
+	    		total =0;
+	    		new_sub_hash.forEach((k, v) -> total += ((IntWritable)v).get());
+	    		new_sub_hash.forEach((k,v) -> new_sub_hash.put(k, new DoubleWritable((100*((IntWritable)v).get()/total)) ));
+	    		context.write(new Text(hash.getKey()), new_sub_hash);
+	    	}
+			super.cleanup(context);
+		}
+		  public void reduce(Text key, Iterable<MapWritable> values, Context context)
+	      throws IOException, InterruptedException {
+			  MapWritable subHash = new MapWritable();
+			  for(MapWritable u : values) {
+				  for(Entry<Writable, Writable> hash : u.entrySet() ) {
+					  if(subHash.containsKey(hash.getKey())) {
+						  Integer oldValue = ((IntWritable) subHash.get(hash.getKey())).get();
+						  Integer commingValue = ((IntWritable) hash.getValue()).get();
+						  subHash.put(hash.getKey(), new IntWritable(oldValue+commingValue));
+					  }else subHash.put(hash.getKey(), hash.getValue());
+				  }
+			  }
+			  if(!allHash.containsKey(key.toString())) allHash.put(key.toString(), subHash);
+			  else {
+				  MapWritable actualHash = allHash.get(key.toString()); // subHash
+				  for(Entry<Writable, Writable> h1 : subHash.entrySet()) {
+					  for(Entry<Writable, Writable> h2 : actualHash.entrySet()) {
+						  actualHash.put(h2.getKey(), new IntWritable(((IntWritable)h1.getValue()).get()+((IntWritable)h2.getValue()).get()));
+					  }
+				  }
+				  allHash.put(key.toString(), actualHash);
+			  }
+	    }
+	 } 
+	
+	 public static void main(String[] args) throws Exception {
+	    Configuration conf = new Configuration();
+	    @SuppressWarnings("deprecation")
+		Job job = new Job(conf, "PairFrequencies");
+	    job.setJarByClass(PairFrequencies.class);  // set the class name
+	    job.setOutputKeyClass(Text.class);
+	    job.setOutputValueClass(MapWritable.class);
+	    job.setMapperClass(Map.class);
+	    job.setReducerClass(Reduce.class);
+	    job.setInputFormatClass(TextInputFormat.class);
+	    job.setOutputFormatClass(TextOutputFormat.class);
+	    FileInputFormat.addInputPath(job, new Path(args[0]));
+	    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+	    job.waitForCompletion(true);
+	 }
+}
+
+// Result of STRIPE approach
+A10	{C31=33.0, D76=33.0, B12=33.0}
+C31	{A12=16.0, B11=16.0, D76=33.0, B12=25.0, A10=8.0}
+A12	{B11=10.0, C31=40.0, D76=20.0, B12=20.0, A10=10.0}
+B11	{A12=11.0, C31=41.0, D76=23.0, B12=17.0, A10=5.0}
+D76	{A12=12.0, B11=18.0, C31=37.0, B12=25.0, A10=6.0}
+B12	{B11=22.0, A12=11.0, C31=44.0, D76=22.0}
+
+// Pseudo code for HYBRID approach
+class Mapper
+	method Map(docid a, docid, d)
+		for all term v in Window(u) do
+			Emit((u,v), 1).
+class Reducer
+	method initiate
+		H = new AssociativeArray()
+		uprev = null
+	method reduce((u,v), [c1,c3,...])
+		if(u != uprev && uprev != null)
+			total = total(H)
+			Emit(uprev, H/total)
+			H = new AssociativeArray()
+		sum = sum([c1,c2,...])
+		H{v} = sum
+		uprev = u
+	method close
+		total = total(H)
+		Emit(uprev, H/total)
+
+// Java code for HYBRID approach
+package FinalProject;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.MapWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+
+public class Hybrid {
+	
+	public static class Pair {
+		private Text a;
+		private Text b;
+		public Pair(Text a, Text b) {this.a = a; this.b = b;}
+		public Pair() {this(new Text(), new Text());}
+		public Text getA() { return this.a;}
+		public Text getB() { return this.b;}
+		public void setA(Text a) {this.a = a;}
+		public void setB(Text b) {this.b = b;}
+		@Override
+		public String toString() {return "<"+a.toString()+","+b.toString()+">";}
+	}
+	
+	public static class PairWritable extends Pair implements WritableComparable<PairWritable> {
+		public PairWritable() {super();}
+	    public PairWritable(Text a, Text b) {super(a, b);}
+	    @Override
+	    public void write(DataOutput out) throws IOException {
+	    	this.getA().write(out);
+			this.getB().write(out);
+	   }
+	    @Override
+	    public void readFields(DataInput in) throws IOException {
+	    	this.getA().readFields(in);
+			this.getB().readFields(in);
+	   }
+	    @Override
+		public int compareTo(PairWritable comming) {
+			int k = new Text(this.toString())
+					.compareTo(new Text(comming.toString()));
+			if(k != 0) return k;
+			return new Text(this.toString())
+					.compareTo(new Text(comming.toString()));
+		}
+	}
+	
+	public static class Map extends Mapper<LongWritable, Text, PairWritable, IntWritable> {
+	    public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+	    	String line = value.toString();
+		    String[] words = line.trim().split(" ");
+		    for(int prev=0; prev<words.length; prev++) {
+		    	if(words[prev].equals("")) {prev++;}
+		    	for(int curr=prev+1; curr<words.length; curr++) {
+		    		if(words[curr].equals("")) {curr++;}
+		    		if(!words[prev].equals(words[curr])) {
+		    			PairWritable newKey = new PairWritable(new Text(words[prev]),new Text(words[curr]));
+		    			context.write(newKey, new IntWritable(1));
+		    		}else {
+		    			curr = words.length;
+		    		}
+		    	}
+		    }
+	    }
+	 }
+	
+	public static class Reduce extends Reducer<PairWritable, IntWritable, Text, MapWritable> {
+		private HashMap<String, Integer> allHash;
+		String uprev;
+		protected void setup(Reducer<PairWritable, IntWritable, Text, MapWritable>.Context context)
+				throws IOException, InterruptedException {
+			super.setup(context);
+			allHash = new HashMap<String, Integer>();
+			uprev = null;
+		}
+		  public void reduce(PairWritable key, Iterable<IntWritable> values, Context context)
+				  throws IOException, InterruptedException {
+			// != DOESN'T WORK WITH STRINGS
+			  if(!key.getA().toString().equals(uprev) && uprev != null) { 
+				  Integer total = 0;
+				  for(Entry<String, Integer> x : allHash.entrySet()) {
+					  total += x.getValue();
+				  }
+				  MapWritable resp = new MapWritable();
+				  for(Entry<String, Integer> hash : allHash.entrySet()) {
+					// NEED TO CONVERT TO DOUBLE, OTHERWISE RETURN 0
+					  double relativeValue = ((double)hash.getValue()/total) *100;
+					  resp.put(new Text(hash.getKey()), new DoubleWritable(relativeValue) );
+				  }
+				  context.write(new Text(uprev), resp);
+				  allHash = new HashMap<String, Integer>();
+			  }
+			  Integer sum = 0;
+			  for(IntWritable x : values) {
+				  sum += x.get();
+			  }
+			  String newKey = key.getB().toString();
+			  if(!allHash.containsKey(newKey)) allHash.put(newKey, sum);
+			  else allHash.put(newKey, sum+allHash.get(newKey));
+			  uprev = key.getA().toString();
+	    }
+		  protected void cleanup(Reducer<PairWritable, IntWritable, Text, MapWritable>.Context context)
+					throws IOException, InterruptedException {
+			  // transform into relative frequencies
+			  Integer total=0;
+			  MapWritable resp = new MapWritable();
+			  for(Entry<String, Integer> x : allHash.entrySet()) {
+				  total += x.getValue();
+			  }
+			  for(Entry<String, Integer> hash : allHash.entrySet()) {
+				  double relativeValue = ((double)hash.getValue()/total)*100;
+				  resp.put(new Text(hash.getKey()), new DoubleWritable(relativeValue));
+			  }
+			  context.write(new Text(uprev), resp);
+			  super.cleanup(context);
+			}
+	 } 
+	
+	 public static void main(String[] args) throws Exception {
+	    Configuration conf = new Configuration();
+	    @SuppressWarnings("deprecation")
+		Job job = new Job(conf, "PairFrequencies");
+	    job.setJarByClass(Hybrid.class);  // set the class name
+	    job.setOutputKeyClass(PairWritable.class);
+	    job.setOutputValueClass(IntWritable.class);
+	    job.setMapperClass(Map.class);
+	    job.setReducerClass(Reduce.class);
+	    job.setInputFormatClass(TextInputFormat.class);
+	    job.setOutputFormatClass(TextOutputFormat.class);
+	    FileInputFormat.addInputPath(job, new Path(args[0]));
+	    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+	    job.waitForCompletion(true);
+	 }
+
+}
+
+// Result of HYBRID approach
+A10	{C31=33.33333333333333, D76=33.33333333333333, B12=33.33333333333333}
+A12	{B11=10.0, C31=40.0, D76=20.0, B12=20.0, A10=10.0}
+B11	{A12=11.76470588235294, C31=41.17647058823529, D76=23.52941176470588, B12=17.647058823529413, A10=5.88235294117647}
+B12	{A12=11.11111111111111, B11=22.22222222222222, C31=44.44444444444444, D76=22.22222222222222}
+C31	{A12=16.666666666666664, B11=16.666666666666664, D76=33.33333333333333, B12=25.0, A10=8.333333333333332}
+D76	{A12=12.5, B11=18.75, C31=37.5, B12=25.0, A10=6.25}
+
+// Time and resource comparison : Pair-Stripe-Hybrid
+
+GC time elapsed (ms):
+	Pair = 54, 44, 42, 44, 74
+	Stripe = 42, 42, 42, 42, 43
+	Hybrid = 74, 43, 48, 73, 74
+
+Demonstrate by running the code
+    • Eclipse
+    • Hue
+    • linux command line
+
+// Spark project
+// sleep deprivation study
+// dataset: https://vincentarelbundock.github.io/Rdatasets/csv/lme4/sleepstudy.csv
+// documentation: https://vincentarelbundock.github.io/Rdatasets/doc/lme4/sleepstudy.html
+// categorical variable: days of deprivation
+// numerical variable: reaction time (ms)
+
+// Scala code
+def waait(): Unit = {for(i <- 1 to 10) {print(i);Thread.sleep(1000);}}
+val dataset = sc.textFile("sleepstudy.csv")
+dataset.takeOrdered(10).foreach(println)
+waait()
+var columns = dataset.map(line => line.split(","))
+var filtered = columns.filter(_(0)!="\"\"")
+
+var mapped = filtered.map(line => (line(3), (line(1).toDouble, line(1).toDouble) ))
+var maxMin = mapped.reduceByKey((x,y) => (Math.min(x._1,y._1), Math.max(x._2,y._2)) )
+var population = maxMin.map(rec => (rec._1, rec._2._1-rec._2._2)).collect()
+population.foreach(println)
+waait()
+var parallelized = sc.parallelize(population)
+var sample = parallelized.sample(false, 0.5).cache
+sample.foreach(println)
+var avgSum = sample.reduce((a, b) => ("sum", a._2+b._2))._2 / sample.count
+println("Total population ms average: "+ parallelized.reduce((a,b) => ("sum", a._2+b._2))._2 / parallelized.count)
+println("Sample average: "+avgSum)
+for(i <- 1 to 9) {
+	var resample = sample.sample(true, 1)
+	avgSum += resample.reduce((a, b) => ("sum", a._2+b._2))._2 / resample.count
+}
+println("10 resample average: "+ (avgSum/10))
+
+// mean of ms by additional day
+var mbd_pop = filtered.map(line => (line(2), line(1).toDouble))
+var sum_count = mbd_pop.map(x => (x._1, (x._2, 1)))
+var sum_count_day = sum_count.reduceByKey((a,b) => (a._1+b._1, a._2+b._2))
+var avg_by_day = sum_count_day.map(x => (x._1, x._2._1/x._2._2))
+
+avg_by_day.sortBy(_._1.toInt).takeOrdered(10).foreach(println)
+
+// scala code output
+scala> :load project.scala
+Loading project.scala...
+waait: ()Unit
+dataset: org.apache.spark.rdd.RDD[String] = sleepstudy.csv MapPartitionsRDD[1] at textFile at project.scala:24
+"","Reaction","Days","Subject"                                                  
+"1",249.56,0,"308"
+"10",466.3535,9,"308"
+"100",458.9167,9,"337"
+"101",236.1032,0,"349"
+"102",230.3167,1,"349"
+"103",238.9256,2,"349"
+"104",254.922,3,"349"
+"105",250.7103,4,"349"
+"106",269.7744,5,"349"
+12345678910columns: org.apache.spark.rdd.RDD[Array[String]] = MapPartitionsRDD[3] at map at project.scala:25
+filtered: org.apache.spark.rdd.RDD[Array[String]] = MapPartitionsRDD[4] at filter at project.scala:25
+mapped: org.apache.spark.rdd.RDD[(String, (Double, Double))] = MapPartitionsRDD[5] at map at project.scala:25
+maxMin: org.apache.spark.rdd.RDD[(String, (Double, Double))] = ShuffledRDD[6] at reduceByKey at project.scala:25
+population: Array[(String, Double)] = Array(("330",-73.8091), ("310",-66.68029999999999), ("349",-121.32840000000002), ("350",-151.03289999999998), ("370",-146.96479999999997), ("372",-99.73000000000002), ("309",-34.3364), ("352",-166.8646), ("369",-109.27070000000003), ("332",-219.3013), ("334",-133.93429999999998), ("331",-86.58109999999999), ("333",-85.27350000000001), ("335",-38.6362), ("337",-167.3055), ("308",-216.7935), ("351",-97.03899999999999), ("371",-110.20339999999999))
+("330",-73.8091)
+("310",-66.68029999999999)
+("349",-121.32840000000002)
+("350",-151.03289999999998)
+("370",-146.96479999999997)
+("372",-99.73000000000002)
+("309",-34.3364)
+("352",-166.8646)
+("369",-109.27070000000003)
+("332",-219.3013)
+("334",-133.93429999999998)
+("331",-86.58109999999999)
+("333",-85.27350000000001)
+("335",-38.6362)
+("337",-167.3055)
+("308",-216.7935)
+("351",-97.03899999999999)
+("371",-110.20339999999999)
+12345678910parallelized: org.apache.spark.rdd.RDD[(String, Double)] = ParallelCollectionRDD[8] at parallelize at project.scala:26
+sample: org.apache.spark.rdd.RDD[(String, Double)] = PartitionwiseSampledRDD[9] at sample at project.scala:25
+("350",-151.03289999999998)
+("370",-146.96479999999997)
+("372",-99.73000000000002)
+("332",-219.3013)
+("331",-86.58109999999999)
+("335",-38.6362)
+("308",-216.7935)
+("371",-110.20339999999999)
+avgSum: Double = -133.6554
+Total population ms average: -118.06027777777778
+Sample average: -133.6554
+10 resample average: -133.36105799242424
+mbd_pop: org.apache.spark.rdd.RDD[(String, Double)] = MapPartitionsRDD[19] at map at project.scala:25
+sum_count: org.apache.spark.rdd.RDD[(String, (Double, Int))] = MapPartitionsRDD[20] at map at project.scala:25
+sum_count_day: org.apache.spark.rdd.RDD[(String, (Double, Int))] = ShuffledRDD[21] at reduceByKey at project.scala:25
+avg_by_day: org.apache.spark.rdd.RDD[(String, Double)] = MapPartitionsRDD[22] at map at project.scala:25
+(0,256.65180555555554)
+(1,264.49575555555555)
+(2,265.3619)
+(3,282.99201111111114)
+(4,288.6494222222222)
+(5,308.5184555555555)
+(6,312.17825555555555)
+(7,318.75058333333334)
+(8,336.62950555555557)
+(9,350.85122222222225)
