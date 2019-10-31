@@ -1,0 +1,201 @@
+Treatment,Age,Severe,Pain
+New Treatment,29,1,1
+New Treatment,39,0,0
+New Treatment,43,0,0
+New Treatment,27,0,1
+New Treatment,16,1,1
+New Treatment,39,0,0
+New Treatment,51,1,0
+New Treatment,35,0,0
+New Treatment,39,1,0
+New Treatment,52,0,0
+New Treatment,43,0,0
+New Treatment,53,0,0
+New Treatment,41,1,0
+New Treatment,50,0,0
+New Treatment,63,0,0
+New Treatment,36,0,0
+New Treatment,56,1,0
+New Treatment,38,0,0
+New Treatment,19,1,1
+New Treatment,34,1,0
+New Treatment,43,0,0
+New Treatment,39,1,1
+New Treatment,27,0,0
+New Treatment,50,0,0
+New Treatment,31,0,0
+New Treatment,70,0,0
+New Treatment,41,0,0
+New Treatment,41,0,0
+New Treatment,62,1,0
+New Treatment,57,1,0
+New Treatment,41,0,0
+New Treatment,36,0,1
+New Treatment,55,0,0
+New Treatment,33,1,0
+New Treatment,53,0,0
+New Treatment,44,1,0
+New Treatment,65,1,0
+New Treatment,42,1,0
+New Treatment,54,1,0
+New Treatment,37,0,0
+New Treatment,30,0,0
+New Treatment,36,1,1
+New Treatment,73,0,0
+New Treatment,67,0,0
+New Treatment,44,0,0
+New Treatment,71,1,0
+New Treatment,39,0,0
+New Treatment,51,0,0
+New Treatment,49,1,0
+New Treatment,19,0,1
+New Treatment,79,1,0
+New Treatment,42,1,1
+New Treatment,35,0,0
+New Treatment,50,0,0
+New Treatment,55,1,0
+New Treatment,45,0,0
+New Treatment,50,1,0
+New Treatment,35,0,0
+New Treatment,53,0,0
+New Treatment,74,0,0
+New Treatment,56,0,0
+New Treatment,53,0,0
+New Treatment,46,0,0
+New Treatment,34,1,1
+New Treatment,36,0,1
+New Treatment,36,0,1
+New Treatment,72,1,0
+New Treatment,31,0,0
+New Treatment,59,0,0
+New Treatment,39,0,0
+New Treatment,26,0,1
+New Treatment,45,0,0
+New Treatment,62,1,0
+New Treatment,39,1,0
+New Treatment,39,0,0
+New Treatment,37,1,1
+New Treatment,63,0,0
+New Treatment,62,0,0
+New Treatment,46,0,0
+New Treatment,58,1,0
+New Treatment,62,1,0
+New Treatment,55,0,0
+New Treatment,41,0,0
+New Treatment,10,0,1
+New Treatment,36,0,0
+New Treatment,33,1,0
+New Treatment,42,0,0
+New Treatment,52,1,0
+New Treatment,34,0,1
+New Treatment,70,0,0
+New Treatment,35,0,0
+New Treatment,42,0,0
+New Treatment,51,0,0
+New Treatment,49,0,0
+New Treatment,58,0,0
+New Treatment,66,0,0
+New Treatment,48,0,0
+New Treatment,36,0,1
+New Treatment,42,0,0
+New Treatment,36,0,0
+Placebo,52,0,0
+Placebo,46,0,0
+Placebo,33,1,1
+Placebo,47,0,0
+Placebo,62,0,0
+Placebo,29,0,1
+Placebo,65,0,0
+Placebo,58,1,0
+Placebo,48,1,1
+Placebo,56,1,0
+Placebo,35,0,1
+Placebo,45,0,0
+Placebo,37,0,0
+Placebo,27,0,1
+Placebo,58,1,0
+Placebo,57,0,0
+Placebo,53,0,0
+Placebo,45,0,0
+Placebo,48,0,1
+Placebo,49,0,1
+Placebo,63,0,0
+Placebo,46,0,1
+Placebo,30,0,1
+Placebo,69,0,0
+Placebo,37,1,1
+Placebo,59,0,0
+Placebo,41,0,1
+Placebo,35,1,1
+Placebo,46,0,1
+Placebo,59,1,0
+Placebo,61,0,0
+Placebo,41,1,1
+Placebo,56,1,0
+Placebo,53,1,0
+Placebo,40,0,1
+Placebo,36,0,1
+Placebo,41,0,1
+Placebo,56,1,0
+Placebo,54,0,0
+Placebo,45,0,0
+Placebo,44,0,0
+Placebo,57,1,1
+Placebo,46,0,1
+Placebo,53,0,0
+Placebo,52,0,0
+Placebo,59,0,0
+Placebo,17,1,1
+Placebo,31,0,1
+Placebo,31,0,1
+Placebo,57,0,1
+Placebo,61,0,1
+Placebo,51,1,0
+Placebo,63,1,0
+Placebo,28,0,1
+Placebo,37,0,0
+Placebo,50,0,0
+Placebo,39,0,1
+Placebo,38,0,1
+Placebo,58,1,0
+Placebo,56,0,0
+Placebo,50,0,0
+Placebo,50,0,0
+Placebo,53,0,0
+Placebo,48,0,1
+Placebo,68,0,0
+Placebo,44,0,0
+Placebo,52,0,0
+Placebo,49,0,0
+Placebo,68,0,0
+Placebo,55,0,0
+Placebo,47,0,0
+Placebo,69,0,0
+Placebo,23,0,1
+Placebo,54,1,1
+Placebo,73,0,0
+Placebo,36,0,1
+Placebo,44,0,0
+Placebo,48,0,1
+Placebo,59,0,0
+Placebo,66,0,0
+Placebo,54,1,0
+Placebo,56,0,1
+Placebo,53,1,0
+Placebo,63,0,0
+Placebo,81,0,0
+Placebo,58,1,0
+Placebo,55,0,0
+Placebo,64,0,0
+Placebo,40,0,0
+Placebo,35,0,1
+Placebo,36,0,0
+Placebo,40,0,0
+Placebo,50,1,0
+Placebo,58,0,0
+Placebo,57,0,0
+Placebo,66,1,0
+Placebo,56,0,0
+Placebo,50,0,0
+Placebo,39,0,1
+Placebo,49,0,0
