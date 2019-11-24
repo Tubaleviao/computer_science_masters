@@ -1,0 +1,46 @@
+### numbers
+S_HZ_OPT_MIN - star inner edged of the optimistic habitable zone (AU)
+S_HZ_OPT_MAX - star outer edged of the optimistic habitable zone (AU)
+S_HZ_CON_MIN - star inner edged of the conservative habitable zone (AU)
+S_HZ_CON_MAX - star outer edged of the conservative habitable zone (AU)
+S_HZ_CON0_MIN - star inner edged of the conservative habitable zone, mass = 0.1 Me (AU)
+S_HZ_CON0_MAX - star outer edged of the conservative habitable zone, mass = 0.1 Me (AU)
+S_HZ_CON1_MIN - star inner edged of the conservative habitable zone, mass = 5 Me (AU)
+S_HZ_CON1_MAX - star outer edged of the conservative habitable zone, mass = 5 Me (AU)
+P_RADIUS_EST - planet radius estimated from mass-radius relation (earth units)
+P_MASS_EST - planet mass estimated from mass-radius relation (earth units)
+P_ESI - planet Earth Similarity Index
+P_FLUX_MIN - planet minimun orbital stellar flux (earth units)
+P_FLUX_MAX - planet maximum orbital stellar flux (earth units)
+P_TEMP_EQUIL - planet equilibrium temperature assuming bond albedo 0.3 (K)
+P_TEMP_EQUIL_MIN - planet minimum equilibrium temperature assuming bond albedo 0.3 (K)
+P_TEMP_EQUIL_MAX - planet maximum equilibrium temperature assuming bond albedo 0.3 (K)
+P_FLUX - planet mean stellar flux (earth units)
+P_DISTANCE_EFF - planet effective thermal distance from the star (AU)
+P_APASTRON - planet apastron (AU)
+P_PERIASTRON - planet periastron (AU)
+P_GRAVITY - planet gravity (earth units)
+P_DENSITY - planet density (earth units)
+S_AGE - star age (Gy)
+S_MASS - star mass (solar units)
+S_RADIUS - star radius (solar units)
+S_TEMPERATURE - star effective temperature (K)
+P_MASS - planet mass (earth masses)
+P_RADIUS - planet radius (earth radii)
+P_PERIOD - planet period (days)
+P_ECCENTRICITY - planet eccentricity
+P_GEO_ALBEDO - planet measured geometric albedo
+P_ESCAPE - planet escape velocity (earth units)
+P_POTENTIAL - planet gravitational potential (earth units)
+P_DISTANCE - planet mean distance from the star (AU)
+
+### classes
+P_HABZONE_OPT - the planet is in the optimistic habitable zone flag (1 = yes)
+P_HABZONE_CON - the planet is in the conservative habitable zone flag (1 = yes)
+P_TYPE_TEMP - planet thermal type (PHL's thermal classification)
+P_TYPE - planet type (PHL's mass-radius classification)
+P_HABITABLE - planet is potentially habitable index (1 = conservative, 2 = optimistic)
+P_DETECTION - planet detection method
+
+
+"S_HZ_OPT_MIN", "S_HZ_OPT_MAX", "S_HZ_CON_MIN", "S_HZ_CON_MAX", "S_HZ_CON0_MIN", "S_HZ_CON0_MAX", "S_HZ_CON1_MIN", "S_HZ_CON1_MAX", "P_RADIUS_EST", "P_MASS_EST", "P_ESI", "P_FLUX_MIN", "P_FLUX_MAX", "P_TEMP_EQUIL", "P_TEMP_EQUIL_MIN", "P_TEMP_EQUIL_MAX", "P_FLUX", "P_DISTANCE_EFF", "P_APASTRON", "P_PERIASTRON", "P_GRAVITY", "P_DENSITY", "S_AGE", "S_MASS", "S_RADIUS", "S_TEMPERATURE", "P_MASS", "P_RADIUS", "P_PERIOD", "P_ECCENTRICITY", "P_GEO_ALBEDO", "P_ESCAPE", "P_POTENTIAL", "P_DISTANCE", "P_HABZONE_OPT", "P_HABZONE_CON", "P_TYPE_TEMP", "P_TYPE", "P_HABITABLE", "P_DETECTION"
